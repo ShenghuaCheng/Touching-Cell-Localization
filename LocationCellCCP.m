@@ -4,9 +4,19 @@ connectedComp = bwconncomp(imgOrig > 0, 6);
 numObjects = connectedComp.NumObjects;
 connectedCompInd = regionprops(connectedComp, 'PixelList');
 cellStructructTotal = cell(numObjects, 1);
+initialIndTotal = cell(numObjects, 1);
+connectedCImgTotal = cell(numObjects, 1);
+for i = 1 : numObjects
+    tempPixelList = connectedCompInd(i).PixelList(:, [2 1 3]);
+    if size(tempPixelList, 1) >= volumeThre && IsCoplanar(tempPixelList) == 0
+        [initialInd, connectedCImg] = ExtractMinBox(tempPixelList, imgOrig);
+        initialIndTotal{i} = initialInd;
+        connectedCImgTotal{i} = connectedCImg;
+    end
+end
 parfor i = 1 : numObjects
     tempPixelList = connectedCompInd(i).PixelList(:, [2 1 3]);
-    tempcellStructruct = LocationCellCC(imgOrig, tempPixelList, thetaGauss, volumeThre, minR, selectThre, localInd1, localInd2, localSize, localNum);
+    tempcellStructruct = LocationCellCC(initialIndTotal{i}, connectedCImgTotal{i}, tempPixelList, thetaGauss, volumeThre, minR, selectThre, localInd1, localInd2, localSize, localNum);
     cellStructructTotal{i} = tempcellStructruct;
     disp(['......', num2str(i), '/', num2str(numObjects), 'with ', num2str(size(tempPixelList, 1)), ' points', '......', num2str(sum(tempcellStructruct.label == 1))]);
 end
